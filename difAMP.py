@@ -1,16 +1,14 @@
 import unittest
-import pyautogui
 import os
 import shutil
 
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from mpmath import *
-import math
-import numpy as np
 
 import time
 
@@ -25,7 +23,10 @@ class TestNimble(unittest.TestCase):
 
     def setUp(self):
         # driver instance
-        self.driver = webdriver.Chrome()
+        options = Options()
+        options.headless = True
+        options.add_argument("--headless=new")
+        self.driver = webdriver.Chrome(options=options)
         with open(r'Devicee.json') as d:
             self.nimbleData = json.load(d)['Nimble'][0]
 
@@ -51,11 +52,11 @@ class TestNimble(unittest.TestCase):
         # amplifier settings
         driver.execute_script("document.querySelector('#signal-chain-drop-area #circuit-content[title=\"Amplifier\"]').click()")
         time.sleep(1)
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-2"))).click()
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-2"))).send_keys(Keys.CONTROL + "a")
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-2"))).send_keys(Keys.DELETE)
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-2"))).send_keys(self.nimbleData['gain'])
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-2"))).send_keys(Keys.ENTER)
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-input"))).click()
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-input"))).send_keys(Keys.CONTROL + "a")
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-input"))).send_keys(Keys.DELETE)
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-input"))).send_keys(self.nimbleData['gain'])
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#amp-gain-input"))).send_keys(Keys.ENTER)
         time.sleep(1)
         position = value_to_position(self.nimbleData['scale_selector'])
         self.scrollToValue(position, driver)
@@ -101,7 +102,9 @@ class TestNimble(unittest.TestCase):
         time.sleep(4)
         WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR,"body.ember-application:nth-child(2) div.tab-content:nth-child(2) div:nth-child(1) div.download-area div.download-individual-buttons div.download-button-row:nth-child(1) > button.btn.btn-primary:nth-child(2)"))).click()
         time.sleep(5)
-        project_path = os.getcwd()
+        # project_path = os.getcwd()
+
+        project_path = self.nimbleData['project_location']
 
         if not os.path.exists(project_path + '\\' + device):
             os.makedirs(project_path + '\\' + device)
@@ -109,8 +112,9 @@ class TestNimble(unittest.TestCase):
         print(dir_list)
         print(project_path + device)
 
-        ltspice_download_path = downloads_path + 'LTSpice ' + current_date + '.zip'
+        ltspice_download_path = downloads_path + 'LTspice ' + current_date + '.zip'
         shutil.move(ltspice_download_path, project_path + '/' + device)
+        print(ltspice_download_path, project_path + '/' + device)
         nimble_download_path = downloads_path + 'Raw Data Export - ' + current_date + '.zip'
         shutil.move(nimble_download_path, project_path + '/' + device)
         device_download_path = device + 'URL G' + gain + '.txt'
